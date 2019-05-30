@@ -7,62 +7,60 @@ const server=express();
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded());
 
+mongoose.connect('mongodb://localhost:27017/test')
 
+const taskSchema= new Schema({
+title:String,
+status:Boolean,
+age: {type:Number, default:18, min:18, max:65},
+date:{type:Date, default: Date.now}
+})
 
-mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true});
+const Task=mongoose.model('Task',taskSchema);
 
-const taskSchema = new Schema({
-    title:  {type:String, required:true},
-    status: {type:Boolean, required:true},
-    age: {type:Number, min:18, max:65, required:true},
-    date: { type: Date, default: Date.now },    
-  });
+server.post("/task",function(req,res){
 
-  const Task=mongoose.model('Task',taskSchema);
+    let  task= new Task();
 
-  server.post("/task",function(req,res){
-      let task=new Task();
+    task.title=req.body.title;
+    task.status=true;
+    task.age=18;
+    task.date=new Date();
 
-      task.title=req.body.title;
-      task.status=true;
-      task.date= new Date();
-      task.age=18;
-    
-      task.save();
-      console.log(task);
-      res.json(task);
-      
-  })
+    console.log(task);
+    task.save();
+    res.json(task);
 
+})
 
-// server.get("/task/:name",function(req,res){
-//     Task.findOne({title:req.params.name}, function(err,doc){
-//         console.log(doc);
-//         res.json(doc);
-//     })
+server.get("/tasks/:name",function(req,res){
+Task.findOne({title:req.params.name}, function(err,doc){
+    console.log(doc);
+    res.json(doc);
+})
+})
 
-// })
-
-server.get("/tasks",function(req,res){
-    Task.find({},function(err,docs){
-        console.log(docs);
-        res.json(docs);  // this is an array which contains all task objects
+server.get("/read",function(req,res){
+    Task.find({},function(err,doc){
+        console.log(doc);
+        res.json(doc);
     })
 })
 
-server.put("/update/:name",function(req,res){
-    Task.findOneAndUpdate({_id:req.params.name}, {$set:{title:'jjj'}}, function(err,doc){
+server.put("/update/:name",(req,res)=>{
+    Task.findOneAndUpdate({title:req.params.name},{title:"WOPAHH!!"},{overwrite:true},function(err,doc){
         console.log(doc);
-            })
-
+        res.json(doc);
+    })
 })
 
-server.delete("/delete/:id", function(req,res){
-    Task.findOneAndDelete({_id:req.params.id}, function(err,doc){
-        console.log(doc);
-        })
+server.delete("/delete/:name",(req,res)=>{
+Task.findOneAndDelete({title:req.params.name},function(err,doc){
+    console.log(doc);
+    res.json(doc);
+})
 })
 
 server.listen(8080,()=>{
-    console.log("Server Has Started")
+    console.log("server has started")
 })
